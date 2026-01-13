@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 interface Recommendation {
   priority: string;
   category: string;
@@ -15,6 +17,24 @@ interface RecommendationListProps {
   recommendations: Recommendation[];
 }
 
+// Use Map for O(1) lookup instead of switch statement
+const PRIORITY_ORDER_MAP = new Map<string, number>([
+  ["critical", 0],
+  ["high", 1],
+  ["medium", 2],
+  ["low", 3],
+]);
+
+const PRIORITY_COLOR_MAP = new Map<string, string>([
+  ["critical", "bg-red-500"],
+  ["high", "bg-orange-500"],
+  ["medium", "bg-amber-500"],
+  ["low", "bg-slate-500"],
+]);
+
+const DEFAULT_PRIORITY_ORDER = 4;
+const DEFAULT_PRIORITY_COLOR = "bg-slate-500";
+
 /**
  * Maps priority strings to sort order.
  * 
@@ -24,18 +44,7 @@ interface RecommendationListProps {
  * as a future extension, treating it as highest priority.
  */
 function getPriorityOrder(priority: string): number {
-  switch (priority.toLowerCase()) {
-    case "critical":
-      return 0; // Highest priority (future extension)
-    case "high":
-      return 1;
-    case "medium":
-      return 2;
-    case "low":
-      return 3;
-    default:
-      return 4; // Unknown priorities sorted last
-  }
+  return PRIORITY_ORDER_MAP.get(priority.toLowerCase()) ?? DEFAULT_PRIORITY_ORDER;
 }
 
 /**
@@ -44,25 +53,25 @@ function getPriorityOrder(priority: string): number {
  * Defensive: Unknown priorities default to neutral gray styling.
  */
 function getPriorityDotColor(priority: string): string {
-  const priorityLower = priority.toLowerCase();
-  if (priorityLower === "critical") {
-    return "bg-red-500";
-  } else if (priorityLower === "high") {
-    return "bg-orange-500";
-  } else if (priorityLower === "medium") {
-    return "bg-amber-500";
-  } else {
-    // Default for "low" and any unknown priorities
-    return "bg-slate-500";
-  }
+  return PRIORITY_COLOR_MAP.get(priority.toLowerCase()) ?? DEFAULT_PRIORITY_COLOR;
 }
 
 export default function RecommendationList({ recommendations }: RecommendationListProps) {
-  // Sort by priority: critical > high > medium > low > unknown
-  // Unknown priorities are safely handled by sorting last
-  const sortedRecommendations = [...recommendations].sort((a, b) => {
-    return getPriorityOrder(a.priority) - getPriorityOrder(b.priority);
-  });
+  // Memoize sorted recommendations to avoid re-sorting on every render
+  const sortedRecommendations = useMemo(() => {
+    if (recommendations.length === 0) return [];
+    
+    // Create array with pre-computed priority order for stable sort
+    const withOrder = recommendations.map((rec) => ({
+      rec,
+      order: getPriorityOrder(rec.priority),
+    }));
+    
+    // Sort once with pre-computed order
+    withOrder.sort((a, b) => a.order - b.order);
+    
+    return withOrder.map((item) => item.rec);
+  }, [recommendations]);
 
   if (sortedRecommendations.length === 0) {
     return (

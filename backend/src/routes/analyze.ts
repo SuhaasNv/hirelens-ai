@@ -97,20 +97,20 @@ export default async function analyzeRoute(fastify: FastifyInstance) {
         // Decode base64 resume file
         const resumeBuffer = Buffer.from(resume.file_content, "base64");
 
-        // Parse resume
-        const parsedResume = await parseResume(resumeBuffer, resume.file_format);
-        const resumeText = await extractResumeText(resumeBuffer, resume.file_format);
+        // Parse resume and extract text in parallel (both operations are independent)
+        const [parsedResume, resumeText] = await Promise.all([
+          parseResume(resumeBuffer, resume.file_format),
+          extractResumeText(resumeBuffer, resume.file_format),
+        ]);
 
-        // Score ATS
+        // Determine configuration values once (avoid repeated optional chaining)
         const atsType = options?.ats_type || resume.metadata?.preferences?.ats_type || "generic";
-        const atsResult = scoreATS(parsedResume, resumeText, job_description.job_description_text, atsType);
+        const recruiterPersona = options?.recruiter_persona || "generic";
+        const jobDescriptionText = job_description.job_description_text;
 
-        // Score Recruiter
-        const recruiterPersona =
-          options?.recruiter_persona || "generic";
+        // Score all stages (synchronous operations, but extracted for clarity)
+        const atsResult = scoreATS(parsedResume, resumeText, jobDescriptionText, atsType);
         const recruiterResult = scoreRecruiter(parsedResume, resumeText, recruiterPersona);
-
-        // Score Interview
         const interviewResult = scoreInterview(parsedResume, resumeText);
 
         // Aggregate scores
@@ -151,38 +151,21 @@ export default async function analyzeRoute(fastify: FastifyInstance) {
               recruiter_persona: recruiterPersona,
               role_level: options?.role_level,
             },
-            processing_stages: [
-              {
-                stage: "parsing",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.1),
-              },
-              {
-                stage: "ats_simulation",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.2),
-              },
-              {
-                stage: "recruiter_evaluation",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.2),
-              },
-              {
-                stage: "interview_readiness",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.2),
-              },
-              {
-                stage: "scoring",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.2),
-              },
-              {
-                stage: "explainability",
-                status: "success",
-                duration_ms: Math.floor(processingTimeMs * 0.1),
-              },
-            ],
+            // Pre-calculate stage durations to avoid repeated Math.floor calls
+            processing_stages: (() => {
+              const parsingTime = Math.floor(processingTimeMs * 0.1);
+              const scoringTime = Math.floor(processingTimeMs * 0.2);
+              const explainabilityTime = Math.floor(processingTimeMs * 0.1);
+              
+              return [
+                { stage: "parsing", status: "success", duration_ms: parsingTime },
+                { stage: "ats_simulation", status: "success", duration_ms: scoringTime },
+                { stage: "recruiter_evaluation", status: "success", duration_ms: scoringTime },
+                { stage: "interview_readiness", status: "success", duration_ms: scoringTime },
+                { stage: "scoring", status: "success", duration_ms: scoringTime },
+                { stage: "explainability", status: "success", duration_ms: explainabilityTime },
+              ];
+            })(),
           },
         };
 

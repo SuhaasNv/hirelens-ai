@@ -41,10 +41,9 @@ export default function AnalyzePage() {
     setIsAnalyzing(true);
 
     try {
-      const [base64Content, fileFormat] = await Promise.all([
-        fileToBase64(resumeFile),
-        Promise.resolve(getFileFormat(resumeFile.name)),
-      ]);
+      // Get file format synchronously (no need for Promise)
+      const fileFormat = getFileFormat(resumeFile.name);
+      const base64Content = await fileToBase64(resumeFile);
 
       const resumeInput: ResumeInput = {
         file_content: base64Content,

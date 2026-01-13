@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface TooltipProps {
   label: string;
@@ -11,13 +11,17 @@ interface TooltipProps {
 export default function Tooltip({ label, description, children }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 
+  // Memoize event handlers to avoid function recreation on every render
+  const handleShow = useCallback(() => setIsVisible(true), []);
+  const handleHide = useCallback(() => setIsVisible(false), []);
+
   return (
     <div className="relative inline-block">
       <div
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        onFocus={() => setIsVisible(true)}
-        onBlur={() => setIsVisible(false)}
+        onMouseEnter={handleShow}
+        onMouseLeave={handleHide}
+        onFocus={handleShow}
+        onBlur={handleHide}
         aria-label={description}
         className="inline-block"
       >

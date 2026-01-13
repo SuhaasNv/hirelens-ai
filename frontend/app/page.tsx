@@ -11,24 +11,31 @@ export default function LandingPage() {
     // Intersection Observer for section entrance animations
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
+        // Use for loop instead of forEach for better performance
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
           if (entry.isIntersecting) {
             entry.target.classList.add("section-entrance");
             observer.unobserve(entry.target);
           }
-        });
+        }
       },
       { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
     );
 
-    sectionRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
+    const refs = sectionRefs.current;
+    // Filter out null refs once instead of checking on every iteration
+    const validRefs = refs.filter((ref): ref is HTMLElement => ref !== null);
+    
+    for (let i = 0; i < validRefs.length; i++) {
+      observer.observe(validRefs[i]);
+    }
 
     return () => {
-      sectionRefs.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
+      for (let i = 0; i < validRefs.length; i++) {
+        observer.unobserve(validRefs[i]);
+      }
+      observer.disconnect();
     };
   }, []);
 

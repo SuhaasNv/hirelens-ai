@@ -6,6 +6,9 @@
 import { AnalyzeRequest, AnalyzeOptions, AnalysisResult, ErrorResponse, ResumeInput, JobDescriptionInput } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+// Normalize URL once at module load instead of on every call
+const NORMALIZED_BASE_URL = API_BASE_URL.replace(/\/$/, "");
+const ANALYZE_ENDPOINT = `${NORMALIZED_BASE_URL}/api/v1/analyze`;
 
 /**
  * Analyzes a resume against a job description.
@@ -21,12 +24,6 @@ export async function analyzeResume(
     options: options || {},
   };
 
-  // Ensure URL has NO trailing slash (exact match required)
-  // Normalize: remove trailing slash from base URL, then append path
-  const baseUrl = API_BASE_URL.replace(/\/$/, "");
-  const url = `${baseUrl}/api/v1/analyze`;
-  const method = "POST";
-
   // Enforce JSON-only request (MVP contract)
   // Backend expects: Content-Type: application/json
   // Body must be JSON string, NOT FormData
@@ -35,8 +32,8 @@ export async function analyzeResume(
   };
   const body = JSON.stringify(requestBody);
 
-  const response = await fetch(url, {
-    method,
+  const response = await fetch(ANALYZE_ENDPOINT, {
+    method: "POST",
     headers,
     body,
   });
@@ -72,22 +69,26 @@ export async function fileToBase64(file: File): Promise<string> {
   });
 }
 
+// File format lookup map for O(1) access
+const FILE_FORMAT_MAP: Record<string, "pdf" | "doc" | "docx" | "txt"> = {
+  pdf: "pdf",
+  doc: "doc",
+  docx: "docx",
+  txt: "txt",
+};
+
 /**
  * Determines file format from file extension.
+ * Optimized: Uses Map lookup and optimized string extraction.
  */
 export function getFileFormat(fileName: string): "pdf" | "doc" | "docx" | "txt" {
-  const extension = fileName.split(".").pop()?.toLowerCase();
-  switch (extension) {
-    case "pdf":
-      return "pdf";
-    case "doc":
-      return "doc";
-    case "docx":
-      return "docx";
-    case "txt":
-      return "txt";
-    default:
-      return "txt"; // Default fallback
+  // Optimize: find last dot index instead of split/pop
+  const lastDotIndex = fileName.lastIndexOf(".");
+  if (lastDotIndex === -1 || lastDotIndex === fileName.length - 1) {
+    return "txt"; // Default fallback
   }
+  
+  const extension = fileName.slice(lastDotIndex + 1).toLowerCase();
+  return FILE_FORMAT_MAP[extension] ?? "txt";
 }
 

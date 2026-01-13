@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Tooltip from "./Tooltip";
 import ConfidenceBadge from "./ConfidenceBadge";
 
@@ -23,22 +24,28 @@ interface ProgressBarProps {
   tooltip?: { label: string; description: string };
 }
 
+// Color lookup map for O(1) access
+const COLOR_MAP: Record<number, string> = {
+  70: "bg-emerald-500",
+  40: "bg-amber-500",
+  0: "bg-red-500",
+};
+
+function getColorClass(percentage: number): string {
+  if (percentage >= 70) return COLOR_MAP[70];
+  if (percentage >= 40) return COLOR_MAP[40];
+  return COLOR_MAP[0];
+}
+
 function ProgressBar({ label, value, showConfidenceBadge, tooltip }: ProgressBarProps) {
-  const percentage = Math.round(value * 100);
-  
-  // Determine color based on percentage
-  let colorClass: string;
-  let bgColorClass: string;
-  if (percentage >= 70) {
-    colorClass = "bg-emerald-500";
-    bgColorClass = "bg-emerald-500/20";
-  } else if (percentage >= 40) {
-    colorClass = "bg-amber-500";
-    bgColorClass = "bg-amber-500/20";
-  } else {
-    colorClass = "bg-red-500";
-    bgColorClass = "bg-red-500/20";
-  }
+  // Memoize percentage and color calculation
+  const { percentage, colorClass } = useMemo(() => {
+    const pct = Math.round(value * 100);
+    return {
+      percentage: pct,
+      colorClass: getColorClass(pct),
+    };
+  }, [value]);
 
   const labelElement = tooltip ? (
     <Tooltip label={tooltip.label} description={tooltip.description}>

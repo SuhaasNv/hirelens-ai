@@ -29,9 +29,9 @@ export default function StageExplanationCard({
             Key Factors
           </h4>
           <ul className="space-y-1.5 sm:space-y-2">
-            {keyFactors.map((factor, index) => (
+            {keyFactors.map((factor) => (
               <li
-                key={index}
+                key={factor}
                 className="text-xs sm:text-sm text-slate-400 flex items-start"
               >
                 <span className="text-slate-500 mr-2">•</span>

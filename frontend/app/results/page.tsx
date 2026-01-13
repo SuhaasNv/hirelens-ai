@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { AnalysisResult } from "../../lib/types";
 import ProbabilityFunnel from "../../components/ProbabilityFunnel";
@@ -29,15 +29,42 @@ export default function ResultsPage() {
     }
   }, [router]);
 
-  if (!analysisResult) {
+  // Memoize computed values to avoid recalculation on every render
+  const { scores, explanations, formattedTimestamp, confidenceInterval } = useMemo(() => {
+    if (!analysisResult) {
+      return {
+        scores: null,
+        explanations: null,
+        formattedTimestamp: "",
+        confidenceInterval: null,
+      };
+    }
+
+    const { scores: s, explanations: e } = analysisResult;
+    const timestamp = new Date(analysisResult.timestamp);
+    const ci = s.overall.overall_hiring_probability_confidence_interval;
+
+    return {
+      scores: s,
+      explanations: e,
+      formattedTimestamp: timestamp.toLocaleString(),
+      confidenceInterval: ci
+        ? {
+            level: (ci.confidence_level * 100).toFixed(0),
+            lower: (ci.lower * 100).toFixed(0),
+            upper: (ci.upper * 100).toFixed(0),
+          }
+        : null,
+    };
+  }, [analysisResult]);
+
+  if (!analysisResult || !scores || !explanations) {
     return (
       <div className="container-custom py-24">
         <div className="text-center text-slate-400">Loading...</div>
       </div>
     );
   }
-
-  const { scores, explanations } = analysisResult;
 
   return (
     <div className="min-h-screen py-12 sm:py-16">
@@ -53,7 +80,7 @@ export default function ResultsPage() {
               Analysis Results
             </h1>
             <p className="text-slate-400 text-xs sm:text-sm">
-              Analysis completed at {new Date(analysisResult.timestamp).toLocaleString()}
+              Analysis completed at {formattedTimestamp}
             </p>
           </div>
 
@@ -73,18 +100,9 @@ export default function ResultsPage() {
                 Overall Hiring Probability
               </div>
             </Tooltip>
-            {scores.overall.overall_hiring_probability_confidence_interval && (
+            {confidenceInterval && (
               <div className="text-xs text-slate-500 mt-2">
-                {(
-                  scores.overall.overall_hiring_probability_confidence_interval.confidence_level *
-                  100
-                ).toFixed(0)}% confidence:{" "}
-                {(
-                  scores.overall.overall_hiring_probability_confidence_interval.lower * 100
-                ).toFixed(0)}% -{" "}
-                {(
-                  scores.overall.overall_hiring_probability_confidence_interval.upper * 100
-                ).toFixed(0)}%
+                {confidenceInterval.level}% confidence: {confidenceInterval.lower}% - {confidenceInterval.upper}%
               </div>
             )}
           </section>
