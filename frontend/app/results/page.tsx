@@ -6,6 +6,8 @@ import type { AnalysisResult } from "../../lib/types";
 import ProbabilityFunnel from "../../components/ProbabilityFunnel";
 import StageExplanationCard from "../../components/StageExplanationCard";
 import RecommendationList from "../../components/RecommendationList";
+import ConfidenceBadge from "../../components/ConfidenceBadge";
+import Tooltip from "../../components/Tooltip";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -52,13 +54,30 @@ export default function ResultsPage() {
               Probability of passing each stage of the hiring process
             </p>
           </div>
-          <ProbabilityFunnel stageProbabilities={scores.overall.stage_probabilities} />
+          <ProbabilityFunnel
+            stageProbabilities={scores.overall.stage_probabilities}
+            showConfidenceBadges={true}
+            atsTooltip={{
+              label: "ATS Pass Probability",
+              description: "Probability that your resume passes automated screening systems.",
+            }}
+          />
           <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-1">
-                {(scores.overall.overall_hiring_probability * 100).toFixed(0)}%
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <div className="text-3xl font-bold text-blue-600">
+                  {(scores.overall.overall_hiring_probability * 100).toFixed(0)}%
+                </div>
+                <ConfidenceBadge value={scores.overall.overall_hiring_probability} />
               </div>
-              <div className="text-sm font-medium text-gray-700">Overall Hiring Probability</div>
+              <Tooltip
+                label="Overall Hiring Probability"
+                description="Estimated probability of receiving an offer based on all stages."
+              >
+                <div className="text-sm font-medium text-gray-700 cursor-help underline decoration-dotted inline-block">
+                  Overall Hiring Probability
+                </div>
+              </Tooltip>
               {scores.overall.overall_hiring_probability_confidence_interval && (
                 <div className="text-xs text-gray-500 mt-1">
                   {(
