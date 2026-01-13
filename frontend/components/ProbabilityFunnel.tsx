@@ -42,24 +42,28 @@ function ProgressBar({ label, value, showConfidenceBadge, tooltip }: ProgressBar
 
   const labelElement = tooltip ? (
     <Tooltip label={tooltip.label} description={tooltip.description}>
-      <span className="text-sm font-medium text-slate-300 cursor-help underline decoration-dotted decoration-slate-500">
+      <span className="text-xs sm:text-sm font-medium text-slate-300 cursor-help underline decoration-dotted decoration-slate-500">
         {label}
       </span>
     </Tooltip>
   ) : (
-    <span className="text-sm font-medium text-slate-300">{label}</span>
+    <span className="text-xs sm:text-sm font-medium text-slate-300">
+      {label}
+    </span>
   );
 
   return (
-    <div className="space-y-3">
-      <div className="flex justify-between items-center">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="flex justify-between items-center gap-2">
         {labelElement}
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-light text-white tabular-nums">{percentage}%</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xl sm:text-2xl font-light text-white tabular-nums">
+            {percentage}%
+          </span>
           {showConfidenceBadge && <ConfidenceBadge value={value} />}
         </div>
       </div>
-      <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden backdrop-blur-sm">
+      <div className="w-full bg-slate-700/50 rounded-full h-1.5 sm:h-2 overflow-hidden backdrop-blur-sm">
         <div
           className={`h-full ${colorClass} transition-all duration-500 ease-out`}
           style={{ width: `${percentage}%` }}
@@ -75,8 +79,8 @@ export default function ProbabilityFunnel({
   atsTooltip,
 }: ProbabilityFunnelProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700/50 transition-all duration-200 card-hover">
         <ProgressBar
           label="ATS Pass"
           value={stageProbabilities.ats_pass}
@@ -84,21 +88,21 @@ export default function ProbabilityFunnel({
           tooltip={atsTooltip}
         />
       </div>
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700/50 transition-all duration-200 card-hover">
         <ProgressBar
           label="Recruiter Pass"
           value={stageProbabilities.recruiter_pass}
           showConfidenceBadge={showConfidenceBadges}
         />
       </div>
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700/50 transition-all duration-200 card-hover">
         <ProgressBar
           label="Interview Pass"
           value={stageProbabilities.interview_pass}
           showConfidenceBadge={showConfidenceBadges}
         />
       </div>
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-700/50 transition-all duration-200 card-hover">
         <ProgressBar
           label="Offer Probability"
           value={stageProbabilities.offer}

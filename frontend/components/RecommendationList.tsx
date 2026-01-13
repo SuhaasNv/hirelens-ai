@@ -66,11 +66,11 @@ export default function RecommendationList({ recommendations }: RecommendationLi
 
   if (sortedRecommendations.length === 0) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-8">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 sm:p-8">
         <div className="text-center py-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-4">
+          <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-emerald-500/20 mb-4">
             <svg
-              className="w-6 h-6 text-emerald-400"
+              className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -83,7 +83,7 @@ export default function RecommendationList({ recommendations }: RecommendationLi
               />
             </svg>
           </div>
-          <p className="text-slate-300 font-light text-lg">
+          <p className="text-slate-300 font-light text-base sm:text-lg">
             No critical issues detected. Your resume performs well across all stages.
           </p>
         </div>
@@ -92,35 +92,45 @@ export default function RecommendationList({ recommendations }: RecommendationLi
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {sortedRecommendations.map((rec, index) => (
         <div
           key={index}
-          className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:border-slate-600/50 transition-colors"
+          className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4 sm:p-6 transition-all duration-200 card-hover"
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
             {/* Priority dot */}
-            <div className={`w-2 h-2 rounded-full ${getPriorityDotColor(rec.priority)} mt-2 flex-shrink-0`} />
-            
-            <div className="flex-1 space-y-3">
+            <div
+              className={`w-2 h-2 rounded-full ${getPriorityDotColor(rec.priority)} mt-2 flex-shrink-0`}
+            />
+
+            <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <h4 className="font-medium text-white mb-1">{rec.action}</h4>
-                  <span className="text-xs text-slate-400 uppercase tracking-wide">{rec.category}</span>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-white mb-1 text-sm sm:text-base">
+                    {rec.action}
+                  </h4>
+                  <span className="text-xs text-slate-400 uppercase tracking-wide">
+                    {rec.category}
+                  </span>
                 </div>
                 {rec.impact_probability_delta !== undefined && (
-                  <span className="text-sm font-light text-emerald-400 whitespace-nowrap">
+                  <span className="text-xs sm:text-sm font-light text-emerald-400 whitespace-nowrap flex-shrink-0">
                     +{(rec.impact_probability_delta * 100).toFixed(1)}%
                   </span>
                 )}
               </div>
 
-              <p className="text-sm text-slate-300 leading-relaxed">{rec.impact}</p>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                {rec.impact}
+              </p>
 
-              <p className="text-sm text-slate-400 leading-relaxed">{rec.reasoning}</p>
+              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                {rec.reasoning}
+              </p>
 
               {rec.impact_score_delta !== undefined && (
-                <div className="pt-3 border-t border-slate-700/50">
+                <div className="pt-2 sm:pt-3 border-t border-slate-700/50">
                   <span className="text-xs text-slate-500">
                     Expected score improvement: +{rec.impact_score_delta.toFixed(1)} points
                   </span>

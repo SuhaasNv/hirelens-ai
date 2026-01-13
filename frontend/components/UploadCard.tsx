@@ -34,7 +34,7 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
   };
 
   return (
-    <div className="bg-slate-800/50 border-2 border-dashed border-slate-600/50 rounded-xl p-8 backdrop-blur-sm hover:border-slate-500/50 transition-colors">
+    <div className="bg-slate-800/50 border-2 border-dashed border-slate-600/50 rounded-xl p-6 sm:p-8 backdrop-blur-sm transition-all duration-200 card-hover">
       <input
         ref={fileInputRef}
         type="file"
@@ -46,7 +46,7 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
       {!fileName ? (
         <div className="text-center">
           <svg
-            className="mx-auto h-12 w-12 text-slate-400"
+            className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-slate-400"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -62,19 +62,23 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
             <button
               type="button"
               onClick={handleClick}
-              className="text-white hover:text-gray-200 font-medium text-base"
+              className="text-white hover:text-gray-200 font-medium text-sm sm:text-base transition-colors"
             >
               Click to upload
             </button>
-            <p className="text-sm text-slate-400 mt-1">or drag and drop</p>
-            <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, or TXT (max 10MB)</p>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              or drag and drop
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              PDF, DOC, DOCX, or TXT (max 10MB)
+            </p>
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg
-              className="h-8 w-8 text-slate-400"
+              className="h-7 w-7 sm:h-8 sm:w-8 text-slate-400 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -86,15 +90,19 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <div>
-              <p className="text-sm font-medium text-gray-100">{fileName}</p>
-              <p className="text-xs text-slate-400">Resume file selected</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-100 truncate">
+                {fileName}
+              </p>
+              <p className="text-xs text-slate-400">
+                Resume file selected
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleRemove}
-            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors flex-shrink-0"
           >
             Remove
           </button>
