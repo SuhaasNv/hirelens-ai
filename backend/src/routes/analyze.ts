@@ -84,37 +84,11 @@ export default async function analyzeRoute(fastify: FastifyInstance) {
   fastify.post(
     "/analyze",
     async (request: FastifyRequest, reply: FastifyReply): Promise<AnalysisResult | void> => {
-      // CRITICAL: Log immediately when handler is hit
-      // If this log doesn't appear, the route is not matching
-      console.log("HANDLER HIT", request.headers["content-type"]);
-      fastify.log.info("✅ [HANDLER] POST /api/v1/analyze handler EXECUTED");
-      fastify.log.info({
-        method: request.method,
-        url: request.url,
-        routerPath: request.routerPath,
-        headers: {
-          "content-type": request.headers["content-type"],
-          origin: request.headers.origin,
-        },
-      }, "Handler request details");
-
       const startTime = Date.now();
-      fastify.log.info({
-        headers: request.headers,
-        bodyKeys: request.body ? Object.keys(request.body as object) : [],
-        bodyShape: request.body
-          ? {
-              hasResume: !!(request.body as any).resume,
-              hasJobDescription: !!(request.body as any).job_description,
-              hasOptions: !!(request.body as any).options,
-            }
-          : null,
-      });
 
       try {
         // Validate request body
         const body = AnalyzeRequestSchema.parse(request.body);
-        fastify.log.info("Request validation passed");
         const { resume, job_description, options } = body;
 
         // Generate analysis ID

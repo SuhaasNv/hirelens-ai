@@ -35,31 +35,10 @@ export async function analyzeResume(
   };
   const body = JSON.stringify(requestBody);
 
-  // Log actual request being sent
-  console.log("[Frontend API] Making request:", {
-    url,
-    method,
-    apiBaseUrl: API_BASE_URL,
-    fullPath: "/api/v1/analyze",
-    headers: Object.fromEntries(Object.entries(headers)),
-    bodyType: typeof body,
-    bodyLength: body.length,
-    contentType: headers["Content-Type"],
-    isJSON: headers["Content-Type"] === "application/json",
-    bodyPreview: body.substring(0, 100) + "...",
-  });
-
   const response = await fetch(url, {
     method,
     headers,
     body,
-  });
-
-  console.log("[Frontend API] Response received:", {
-    status: response.status,
-    statusText: response.statusText,
-    ok: response.ok,
-    url: response.url,
   });
 
   if (!response.ok) {
@@ -69,7 +48,6 @@ export async function analyzeResume(
       timestamp: new Date().toISOString(),
     }));
 
-    console.error("[Frontend API] Request failed:", errorData);
     throw new Error(errorData.message || `API request failed: ${response.statusText}`);
   }
 

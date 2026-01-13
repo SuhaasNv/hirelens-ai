@@ -20,7 +20,7 @@ export default function ResultsPage() {
       try {
         setAnalysisResult(JSON.parse(stored));
         // Trigger fade-in animation after mount
-        setTimeout(() => setIsMounted(true), 50);
+        requestAnimationFrame(() => setIsMounted(true));
       } catch {
         router.push("/");
       }

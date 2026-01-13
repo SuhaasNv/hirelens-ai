@@ -14,13 +14,6 @@ export default function AnalyzePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Confirm frontend origin on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      console.log("🌐 Frontend running on", window.location.origin);
-    }
-  }, []);
-
   const handleFileChange = (file: File | null) => {
     setResumeFile(file);
     setError(null);
@@ -48,7 +41,6 @@ export default function AnalyzePage() {
     setIsAnalyzing(true);
 
     try {
-      // Minimum 3-second wait for better UX
       const [base64Content, fileFormat] = await Promise.all([
         fileToBase64(resumeFile),
         Promise.resolve(getFileFormat(resumeFile.name)),
@@ -65,15 +57,7 @@ export default function AnalyzePage() {
         job_description_text: jobDescription.trim(),
       };
 
-      // Ensure minimum 3 seconds elapsed
-      const startTime = Date.now();
       const result = await analyzeResume(resumeInput, jobDescriptionInput);
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 3000 - elapsed);
-      
-      if (remaining > 0) {
-        await new Promise((resolve) => setTimeout(resolve, remaining));
-      }
 
       // Store result in sessionStorage for results page
       sessionStorage.setItem("analysisResult", JSON.stringify(result));
@@ -109,7 +93,7 @@ export default function AnalyzePage() {
         <div className="container-custom">
           <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-              <UploadCard onFileChange={handleFileChange} />
+              <UploadCard onFileChange={handleFileChange} onError={setError} />
 
               <JobDescriptionInput
                 value={jobDescription}

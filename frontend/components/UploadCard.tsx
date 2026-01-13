@@ -4,18 +4,67 @@ import { useRef, useState } from "react";
 
 interface UploadCardProps {
   onFileChange: (file: File | null) => void;
+  onError?: (error: string) => void;
 }
 
-export default function UploadCard({ onFileChange }: UploadCardProps) {
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const ALLOWED_FILE_TYPES = ["pdf", "doc", "docx", "txt"];
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+];
+
+export default function UploadCard({ onFileChange, onError }: UploadCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const validateFile = (file: File): string | null => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return `File size exceeds 10MB limit. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`;
+    }
+
+    // Check file extension
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (!extension || !ALLOWED_FILE_TYPES.includes(extension)) {
+      return `Invalid file type. Please upload a PDF, DOC, DOCX, or TXT file.`;
+    }
+
+    // Check MIME type (if available)
+    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      return `Invalid file type. Please upload a PDF, DOC, DOCX, or TXT file.`;
+    }
+
+    return null;
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    
     if (file) {
+      const error = validateFile(file);
+      if (error) {
+        setValidationError(error);
+        setFileName(null);
+        onFileChange(null);
+        if (onError) {
+          onError(error);
+        }
+        // Reset input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      setValidationError(null);
       setFileName(file.name);
       onFileChange(file);
     } else {
+      setValidationError(null);
       setFileName(null);
       onFileChange(null);
     }
@@ -72,6 +121,11 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
             <p className="text-xs text-slate-500 mt-1">
               PDF, DOC, DOCX, or TXT (max 10MB)
             </p>
+            {validationError && (
+              <p className="text-xs text-red-400 mt-2 px-2">
+                {validationError}
+              </p>
+            )}
           </div>
         </div>
       ) : (
