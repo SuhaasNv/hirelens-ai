@@ -233,21 +233,57 @@ export interface AnalysisResult {
         summary: string;
         key_factors: string[];
         score_breakdown?: string;
+        ai_enhanced?: {
+          interview_probe_points: string[];
+          top_issues_to_fix: Array<{
+            issue: string;
+            why_it_matters: string;
+            priority: "low" | "medium" | "high" | "critical";
+          }>;
+          improvement_outlook: string;
+        };
       };
       recruiter: {
         summary: string;
         key_factors: string[];
         score_breakdown?: string;
+        ai_enhanced?: {
+          interview_probe_points: string[];
+          top_issues_to_fix: Array<{
+            issue: string;
+            why_it_matters: string;
+            priority: "low" | "medium" | "high" | "critical";
+          }>;
+          improvement_outlook: string;
+        };
       };
       interview: {
         summary: string;
         key_factors: string[];
         score_breakdown?: string;
+        ai_enhanced?: {
+          interview_probe_points: string[];
+          top_issues_to_fix: Array<{
+            issue: string;
+            why_it_matters: string;
+            priority: "low" | "medium" | "high" | "critical";
+          }>;
+          improvement_outlook: string;
+        };
       };
       overall: {
         summary: string;
         key_factors: string[];
         score_breakdown?: string;
+        ai_enhanced?: {
+          interview_probe_points: string[];
+          top_issues_to_fix: Array<{
+            issue: string;
+            why_it_matters: string;
+            priority: "low" | "medium" | "high" | "critical";
+          }>;
+          improvement_outlook: string;
+        };
       };
     };
     recommendations: Array<{

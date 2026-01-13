@@ -151,25 +151,33 @@ export default function ResultsPage() {
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* ATS Stage: Prefer AI-enhanced explanation when available, fallback to deterministic */}
               <StageExplanationCard
                 stageName="ATS"
                 summary={explanations.stage_explanations.ats.summary}
                 keyFactors={explanations.stage_explanations.ats.key_factors || []}
+                aiEnhanced={explanations.stage_explanations.ats.ai_enhanced}
               />
+              {/* Recruiter Stage: Prefer AI-enhanced explanation when available, fallback to deterministic */}
               <StageExplanationCard
                 stageName="Recruiter"
                 summary={explanations.stage_explanations.recruiter.summary}
                 keyFactors={explanations.stage_explanations.recruiter.key_factors || []}
+                aiEnhanced={explanations.stage_explanations.recruiter.ai_enhanced}
               />
+              {/* Interview Stage: Prefer AI-enhanced explanation when available, fallback to deterministic */}
               <StageExplanationCard
                 stageName="Interview"
                 summary={explanations.stage_explanations.interview.summary}
                 keyFactors={explanations.stage_explanations.interview.key_factors || []}
+                aiEnhanced={explanations.stage_explanations.interview.ai_enhanced}
               />
+              {/* Overall Stage: Prefer AI-enhanced explanation when available, fallback to deterministic */}
               <StageExplanationCard
                 stageName="Overall"
                 summary={explanations.stage_explanations.overall.summary}
                 keyFactors={explanations.stage_explanations.overall.key_factors || []}
+                aiEnhanced={explanations.stage_explanations.overall.ai_enhanced}
               />
             </div>
           </section>
