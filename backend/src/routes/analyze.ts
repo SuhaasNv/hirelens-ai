@@ -9,12 +9,6 @@ import { aggregateScores } from "../services/aggregator";
 import { generateExplanations } from "../services/explainability";
 import { AnalysisResult } from "../types";
 
-/**
- * Input validation schemas for the /analyze endpoint.
- *
- * These mirror the canonical API contracts and ensure that the handler
- * receives well-structured, type-safe data before any business logic runs.
- */
 // Zod schemas for request validation
 const ResumeInputSchema = z.object({
   file_content: z.string(),
@@ -80,24 +74,6 @@ const AnalyzeRequestSchema = z.object({
     .optional(),
 });
 
-/**
- * Registers the POST /analyze route.
- *
- * REQUEST:
- * - Body: { resume: ResumeInput, job_description: JobDescriptionInput, options?: AnalyzeOptions }
- *
- * RESPONSE:
- * - 200 OK: `AnalysisResult` (see backend/types.ts)
- * - 400 BAD REQUEST: Validation error (ErrorResponse)
- * - 500 INTERNAL SERVER ERROR: Generic internal error (ErrorResponse)
- *
- * PIPELINE:
- * 1. Validate request.
- * 2. Decode and parse resume.
- * 3. Score ATS, recruiter, and interview readiness.
- * 4. Aggregate scores into overall probabilities.
- * 5. Generate human-readable explanations and recommendations.
- */
 export default async function analyzeRoute(fastify: FastifyInstance) {
   // Log route registration
   // Route path is relative: /analyze
@@ -218,4 +194,3 @@ export default async function analyzeRoute(fastify: FastifyInstance) {
     }
   );
 }
-
