@@ -10,18 +10,18 @@ export default function ConfidenceBadge({ value }: ConfidenceBadgeProps) {
 
   if (value >= 0.7) {
     label = "High confidence";
-    colorClass = "bg-green-100 text-green-700 border-green-200";
+    colorClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
   } else if (value >= 0.4) {
     label = "Medium confidence";
-    colorClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+    colorClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
   } else {
     label = "Low confidence";
-    colorClass = "bg-red-100 text-red-700 border-red-200";
+    colorClass = "bg-red-500/20 text-red-400 border-red-500/30";
   }
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${colorClass}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-light border ${colorClass}`}
     >
       {label}
     </span>

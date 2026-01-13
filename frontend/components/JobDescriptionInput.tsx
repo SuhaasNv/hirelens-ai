@@ -11,7 +11,7 @@ export default function JobDescriptionInput({
 }: JobDescriptionInputProps) {
   return (
     <div>
-      <label htmlFor="job-description" className="block text-sm font-medium text-gray-700 mb-2">
+      <label htmlFor="job-description" className="block text-sm font-medium text-slate-300 mb-3">
         Job Description
       </label>
       <textarea
@@ -19,10 +19,10 @@ export default function JobDescriptionInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={12}
-        className="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 resize-y"
+        className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-lg text-gray-100 placeholder-slate-500 focus:ring-2 focus:ring-white/20 focus:border-slate-500 resize-y backdrop-blur-sm transition-all"
         placeholder="Paste the job description here..."
       />
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-2 text-sm text-slate-400">
         {value.length} characters
       </p>
     </div>

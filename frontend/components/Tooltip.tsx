@@ -25,14 +25,14 @@ export default function Tooltip({ label, description, children }: TooltipProps) 
       </div>
       {isVisible && (
         <div
-          className="absolute z-10 px-3 py-2 text-sm text-white bg-gray-900 rounded-md shadow-lg whitespace-normal w-64 bottom-full left-1/2 transform -translate-x-1/2 mb-2"
+          className="absolute z-10 px-3 py-2 text-sm text-white bg-slate-900/95 backdrop-blur-sm border border-slate-700 rounded-lg shadow-xl whitespace-normal w-64 bottom-full left-1/2 transform -translate-x-1/2 mb-2"
           role="tooltip"
         >
-          <div className="font-semibold mb-1">{label}</div>
-          <div className="text-xs text-gray-300">{description}</div>
+          <div className="font-medium mb-1 text-gray-100">{label}</div>
+          <div className="text-xs text-slate-300">{description}</div>
           {/* Tooltip arrow */}
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-            <div className="border-4 border-transparent border-t-gray-900" />
+            <div className="border-4 border-transparent border-t-slate-900" />
           </div>
         </div>
       )}

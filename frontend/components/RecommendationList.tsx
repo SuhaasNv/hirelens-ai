@@ -39,19 +39,21 @@ function getPriorityOrder(priority: string): number {
 }
 
 /**
- * Returns Tailwind classes for priority badge styling.
+ * Returns Tailwind classes for priority dot color.
  * 
  * Defensive: Unknown priorities default to neutral gray styling.
  */
-function getPriorityBadgeClass(priority: string): string {
+function getPriorityDotColor(priority: string): string {
   const priorityLower = priority.toLowerCase();
-  if (priorityLower === "critical" || priorityLower === "high") {
-    return "bg-red-100 text-red-700 border-red-200";
+  if (priorityLower === "critical") {
+    return "bg-red-500";
+  } else if (priorityLower === "high") {
+    return "bg-orange-500";
   } else if (priorityLower === "medium") {
-    return "bg-yellow-100 text-yellow-700 border-yellow-200";
+    return "bg-amber-500";
   } else {
     // Default for "low" and any unknown priorities
-    return "bg-gray-100 text-gray-700 border-gray-200";
+    return "bg-slate-500";
   }
 }
 
@@ -64,11 +66,11 @@ export default function RecommendationList({ recommendations }: RecommendationLi
 
   if (sortedRecommendations.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+      <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-8">
         <div className="text-center py-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-4">
             <svg
-              className="w-6 h-6 text-green-600"
+              className="w-6 h-6 text-emerald-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -81,7 +83,7 @@ export default function RecommendationList({ recommendations }: RecommendationLi
               />
             </svg>
           </div>
-          <p className="text-gray-700 font-medium">
+          <p className="text-slate-300 font-light text-lg">
             No critical issues detected. Your resume performs well across all stages.
           </p>
         </div>
@@ -94,41 +96,38 @@ export default function RecommendationList({ recommendations }: RecommendationLi
       {sortedRecommendations.map((rec, index) => (
         <div
           key={index}
-          className="bg-white rounded-lg border-l-4 border-blue-500 border border-gray-200 p-5 shadow-sm"
+          className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6 hover:border-slate-600/50 transition-colors"
         >
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <span
-                className={`px-2.5 py-1 text-xs font-semibold rounded border ${getPriorityBadgeClass(
-                  rec.priority
-                )}`}
-              >
-                {rec.priority.toUpperCase()}
-              </span>
-              <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                {rec.category}
-              </span>
+          <div className="flex items-start gap-4">
+            {/* Priority dot */}
+            <div className={`w-2 h-2 rounded-full ${getPriorityDotColor(rec.priority)} mt-2 flex-shrink-0`} />
+            
+            <div className="flex-1 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h4 className="font-medium text-white mb-1">{rec.action}</h4>
+                  <span className="text-xs text-slate-400 uppercase tracking-wide">{rec.category}</span>
+                </div>
+                {rec.impact_probability_delta !== undefined && (
+                  <span className="text-sm font-light text-emerald-400 whitespace-nowrap">
+                    +{(rec.impact_probability_delta * 100).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm text-slate-300 leading-relaxed">{rec.impact}</p>
+
+              <p className="text-sm text-slate-400 leading-relaxed">{rec.reasoning}</p>
+
+              {rec.impact_score_delta !== undefined && (
+                <div className="pt-3 border-t border-slate-700/50">
+                  <span className="text-xs text-slate-500">
+                    Expected score improvement: +{rec.impact_score_delta.toFixed(1)} points
+                  </span>
+                </div>
+              )}
             </div>
-            {rec.impact_probability_delta !== undefined && (
-              <span className="text-xs font-medium text-blue-600">
-                +{(rec.impact_probability_delta * 100).toFixed(1)}% probability
-              </span>
-            )}
           </div>
-
-          <h4 className="font-semibold text-gray-900 mb-2">{rec.action}</h4>
-
-          <p className="text-sm text-gray-700 mb-2">{rec.impact}</p>
-
-          <p className="text-sm text-gray-600">{rec.reasoning}</p>
-
-          {rec.impact_score_delta !== undefined && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <span className="text-xs text-gray-500">
-                Expected score improvement: +{rec.impact_score_delta.toFixed(1)} points
-              </span>
-            </div>
-          )}
         </div>
       ))}
     </div>

@@ -5,7 +5,7 @@
 
 import { AnalyzeRequest, AnalyzeOptions, AnalysisResult, ErrorResponse, ResumeInput, JobDescriptionInput } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
 
 /**
  * Analyzes a resume against a job description.
@@ -21,12 +21,45 @@ export async function analyzeResume(
     options: options || {},
   };
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
+  // Ensure URL has NO trailing slash (exact match required)
+  // Normalize: remove trailing slash from base URL, then append path
+  const baseUrl = API_BASE_URL.replace(/\/$/, "");
+  const url = `${baseUrl}/api/v1/analyze`;
+  const method = "POST";
+
+  // Enforce JSON-only request (MVP contract)
+  // Backend expects: Content-Type: application/json
+  // Body must be JSON string, NOT FormData
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  const body = JSON.stringify(requestBody);
+
+  // Log actual request being sent
+  console.log("[Frontend API] Making request:", {
+    url,
+    method,
+    apiBaseUrl: API_BASE_URL,
+    fullPath: "/api/v1/analyze",
+    headers: Object.fromEntries(Object.entries(headers)),
+    bodyType: typeof body,
+    bodyLength: body.length,
+    contentType: headers["Content-Type"],
+    isJSON: headers["Content-Type"] === "application/json",
+    bodyPreview: body.substring(0, 100) + "...",
+  });
+
+  const response = await fetch(url, {
+    method,
+    headers,
+    body,
+  });
+
+  console.log("[Frontend API] Response received:", {
+    status: response.status,
+    statusText: response.statusText,
+    ok: response.ok,
+    url: response.url,
   });
 
   if (!response.ok) {
@@ -36,6 +69,7 @@ export async function analyzeResume(
       timestamp: new Date().toISOString(),
     }));
 
+    console.error("[Frontend API] Request failed:", errorData);
     throw new Error(errorData.message || `API request failed: ${response.statusText}`);
   }
 

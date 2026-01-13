@@ -34,7 +34,7 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
   };
 
   return (
-    <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6">
+    <div className="bg-slate-800/50 border-2 border-dashed border-slate-600/50 rounded-xl p-8 backdrop-blur-sm hover:border-slate-500/50 transition-colors">
       <input
         ref={fileInputRef}
         type="file"
@@ -46,7 +46,7 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
       {!fileName ? (
         <div className="text-center">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-slate-400"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -62,19 +62,19 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
             <button
               type="button"
               onClick={handleClick}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-white hover:text-gray-200 font-medium text-base"
             >
               Click to upload
             </button>
-            <p className="text-sm text-gray-500 mt-1">or drag and drop</p>
-            <p className="text-xs text-gray-400 mt-1">PDF, DOC, DOCX, or TXT (max 10MB)</p>
+            <p className="text-sm text-slate-400 mt-1">or drag and drop</p>
+            <p className="text-xs text-slate-500 mt-1">PDF, DOC, DOCX, or TXT (max 10MB)</p>
           </div>
         </div>
       ) : (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <svg
-              className="h-8 w-8 text-gray-400"
+              className="h-8 w-8 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -87,14 +87,14 @@ export default function UploadCard({ onFileChange }: UploadCardProps) {
               />
             </svg>
             <div>
-              <p className="text-sm font-medium text-gray-900">{fileName}</p>
-              <p className="text-xs text-gray-500">Resume file selected</p>
+              <p className="text-sm font-medium text-gray-100">{fileName}</p>
+              <p className="text-xs text-slate-400">Resume file selected</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleRemove}
-            className="text-red-600 hover:text-red-700 text-sm font-medium"
+            className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
           >
             Remove
           </button>

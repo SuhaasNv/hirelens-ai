@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import UploadCard from "../components/UploadCard";
 import JobDescriptionInput from "../components/JobDescriptionInput";
@@ -13,6 +13,13 @@ export default function HomePage() {
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Confirm frontend origin on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      console.log("🌐 Frontend running on", window.location.origin);
+    }
+  }, []);
 
   const handleFileChange = (file: File | null) => {
     setResumeFile(file);
@@ -67,36 +74,54 @@ export default function HomePage() {
   };
 
   return (
-    <div className="container-custom py-12">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Resume Analysis</h2>
-        <p className="text-gray-600 mb-8">
-          Upload your resume and job description to get AI-powered insights on your hiring prospects.
-        </p>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative py-24 sm:py-32 lg:py-40">
+        <div className="container-custom">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight text-white">
+              UNDERSTAND HOW
+              <br />
+              <span className="font-normal">YOU GET HIRED</span>
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-300 font-light max-w-2xl mx-auto">
+              ATS. Recruiters. Interviews.
+              <br />
+              Explained clearly.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <UploadCard onFileChange={handleFileChange} />
+      {/* Form Section */}
+      <section className="relative py-16">
+        <div className="container-custom">
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <UploadCard onFileChange={handleFileChange} />
 
-          <JobDescriptionInput
-            value={jobDescription}
-            onChange={handleJobDescriptionChange}
-          />
+              <JobDescriptionInput
+                value={jobDescription}
+                onChange={handleJobDescriptionChange}
+              />
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-              {error}
-            </div>
-          )}
+              {error && (
+                <div className="bg-red-900/30 border border-red-500/50 text-red-200 px-6 py-4 rounded-lg backdrop-blur-sm">
+                  {error}
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={isAnalyzing || !resumeFile || !jobDescription.trim()}
-            className="w-full bg-blue-600 text-white font-medium py-3 px-6 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
-          </button>
-        </form>
-      </div>
+              <button
+                type="submit"
+                disabled={isAnalyzing || !resumeFile || !jobDescription.trim()}
+                className="w-full bg-white text-slate-900 font-medium py-4 px-8 rounded-lg hover:bg-gray-100 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-all duration-200 text-lg tracking-wide"
+              >
+                {isAnalyzing ? "Analyzing..." : "Analyze My Resume"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
