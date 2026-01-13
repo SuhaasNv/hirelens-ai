@@ -3,11 +3,27 @@
 import { useState, useCallback } from "react";
 
 interface TooltipProps {
+  /** Short title for the tooltip, shown in bold at the top. */
   label: string;
+  /** Human-readable description explaining the concept/value. */
   description: string;
+  /** The element that the tooltip is attached to (trigger). */
   children: React.ReactNode;
 }
 
+/**
+ * Tooltip
+ *
+ * RESPONSIBILITY:
+ * - Provides a small, accessible tooltip on hover/focus.
+ *
+ * ACCESSIBILITY:
+ * - Uses `aria-label` on the trigger for screen readers.
+ * - Uses `role="tooltip"` for the content box.
+ *
+ * NOTES:
+ * - This component does not manage positioning beyond a simple "above trigger" layout.
+ */
 export default function Tooltip({ label, description, children }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
 

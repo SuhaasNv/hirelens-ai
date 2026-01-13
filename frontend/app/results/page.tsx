@@ -9,6 +9,20 @@ import RecommendationList from "../../components/RecommendationList";
 import ConfidenceBadge from "../../components/ConfidenceBadge";
 import Tooltip from "../../components/Tooltip";
 
+/**
+ * ResultsPage
+ *
+ * RESPONSIBILITY:
+ * - Reads the previously stored `AnalysisResult` from `sessionStorage`.
+ * - Renders the full visual breakdown: funnel, stage explanations, recommendations.
+ *
+ * DATA FLOW:
+ * - `AnalyzePage` stores `analysisResult` in `sessionStorage`.
+ * - This page reads it on mount and never re-fetches from the backend.
+ *
+ * NOTES:
+ * - If no result is found (e.g. direct navigation), user is redirected back to home.
+ */
 export default function ResultsPage() {
   const router = useRouter();
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -19,12 +33,14 @@ export default function ResultsPage() {
     if (stored) {
       try {
         setAnalysisResult(JSON.parse(stored));
-        // Trigger fade-in animation after mount
+        // Trigger fade-in animation after mount for a smoother page entrance.
         requestAnimationFrame(() => setIsMounted(true));
       } catch {
+        // If stored data is corrupted, send the user back to a safe entry point.
         router.push("/");
       }
     } else {
+      // No analysis found (e.g., direct navigation) – send user back to home.
       router.push("/");
     }
   }, [router]);

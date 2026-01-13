@@ -7,6 +7,19 @@ import JobDescriptionInput from "../../components/JobDescriptionInput";
 import { analyzeResume, fileToBase64, getFileFormat } from "../../lib/api";
 import type { ResumeInput, JobDescriptionInput as JobDescriptionInputType } from "../../lib/types";
 
+/**
+ * AnalyzePage
+ *
+ * RESPONSIBILITY:
+ * - Collects the resume file and job description text from the user.
+ * - Validates inputs on the client side before calling the backend.
+ * - Calls `analyzeResume` and stores the result in `sessionStorage`.
+ * - Redirects to `/results` upon successful analysis.
+ *
+ * NOTES:
+ * - This component does not contain any scoring or AI logic.
+ * - It is purely responsible for wiring UI ↔ API ↔ navigation.
+ */
 export default function AnalyzePage() {
   const router = useRouter();
   const [resumeFile, setResumeFile] = useState<File | null>(null);

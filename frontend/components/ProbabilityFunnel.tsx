@@ -4,6 +4,10 @@ import { useMemo } from "react";
 import Tooltip from "./Tooltip";
 import ConfidenceBadge from "./ConfidenceBadge";
 
+/**
+ * Probability values for each stage of the funnel.
+ * All values are expected to be in the 0-1 range.
+ */
 interface StageProbabilities {
   ats_pass: number;
   recruiter_pass: number;
@@ -12,25 +16,40 @@ interface StageProbabilities {
 }
 
 interface ProbabilityFunnelProps {
+  /** Stage-level probabilities (0-1) from the backend. */
   stageProbabilities: StageProbabilities;
+  /** When true, shows confidence badges next to each percentage. */
   showConfidenceBadges?: boolean;
+  /** Optional tooltip configuration for the ATS pass bar. */
   atsTooltip?: { label: string; description: string };
 }
 
 interface ProgressBarProps {
+  /** Human-friendly label for this bar (e.g., "ATS Pass"). */
   label: string;
-  value: number; // 0-1 probability
+  /** Raw probability in the 0-1 range. */
+  value: number;
+  /** Whether to render a confidence badge next to the percentage. */
   showConfidenceBadge?: boolean;
+  /** Optional tooltip metadata for this bar. */
   tooltip?: { label: string; description: string };
 }
 
-// Color lookup map for O(1) access
+// Color lookup map for O(1) access.
+// Keys represent threshold boundaries; values are Tailwind background classes.
 const COLOR_MAP: Record<number, string> = {
   70: "bg-emerald-500",
   40: "bg-amber-500",
   0: "bg-red-500",
 };
 
+/**
+ * Returns a semantic color class based on the probability percentage.
+ *
+ * - 70–100%: green (strong)
+ * - 40–69%: yellow/orange (medium)
+ * - 0–39%: red (weak)
+ */
 function getColorClass(percentage: number): string {
   if (percentage >= 70) return COLOR_MAP[70];
   if (percentage >= 40) return COLOR_MAP[40];

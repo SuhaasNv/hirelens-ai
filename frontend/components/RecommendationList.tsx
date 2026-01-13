@@ -3,21 +3,35 @@
 import { useMemo } from "react";
 
 interface Recommendation {
+  /** Priority of the recommendation, e.g. "high", "medium", "low", "critical". */
   priority: string;
+  /** Category or area this recommendation impacts (ATS, recruiter, interview, overall). */
   category: string;
+  /** Short, action-oriented description of what the user should do. */
   action: string;
+  /** Explanation of why this matters and what it changes. */
   impact: string;
+  /** Reasoning that ties the recommendation back to signals/scores. */
   reasoning: string;
+  /** Stage of the funnel most affected by this recommendation. */
   stage_affected: string;
+  /** Optional expected score delta if the recommendation is applied. */
   impact_score_delta?: number;
+  /** Optional expected probability delta if the recommendation is applied. */
   impact_probability_delta?: number;
 }
 
 interface RecommendationListProps {
+  /** Raw recommendations from the backend `AnalysisResult`. */
   recommendations: Recommendation[];
 }
 
-// Use Map for O(1) lookup instead of switch statement
+/**
+ * Priority ordering lookup.
+ *
+ * Using a Map gives O(1) lookup and keeps the mapping self-documenting.
+ * Unknown priorities are handled gracefully by falling back to a default.
+ */
 const PRIORITY_ORDER_MAP = new Map<string, number>([
   ["critical", 0],
   ["high", 1],
@@ -25,6 +39,11 @@ const PRIORITY_ORDER_MAP = new Map<string, number>([
   ["low", 3],
 ]);
 
+/**
+ * Visual color mapping for the priority dot.
+ *
+ * This is purely presentational and can evolve independently of the sort order.
+ */
 const PRIORITY_COLOR_MAP = new Map<string, string>([
   ["critical", "bg-red-500"],
   ["high", "bg-orange-500"],
@@ -37,7 +56,7 @@ const DEFAULT_PRIORITY_COLOR = "bg-slate-500";
 
 /**
  * Maps priority strings to sort order.
- * 
+ *
  * Defensive against future backend extensions: Unknown priorities are safely
  * handled by sorting them last (highest order number). The backend currently
  * defines: "high", "medium", "low". This frontend also supports "critical"
@@ -49,7 +68,7 @@ function getPriorityOrder(priority: string): number {
 
 /**
  * Returns Tailwind classes for priority dot color.
- * 
+ *
  * Defensive: Unknown priorities default to neutral gray styling.
  */
 function getPriorityDotColor(priority: string): string {
@@ -59,9 +78,10 @@ function getPriorityDotColor(priority: string): string {
 export default function RecommendationList({ recommendations }: RecommendationListProps) {
   // Memoize sorted recommendations to avoid re-sorting on every render
   const sortedRecommendations = useMemo(() => {
+    // Fast path: nothing to sort or render.
     if (recommendations.length === 0) return [];
     
-    // Create array with pre-computed priority order for stable sort
+    // Create array with pre-computed priority order for stable, explainable sorting.
     const withOrder = recommendations.map((rec) => ({
       rec,
       order: getPriorityOrder(rec.priority),

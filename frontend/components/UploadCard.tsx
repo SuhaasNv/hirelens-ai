@@ -1,16 +1,35 @@
 "use client";
 
-import { useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useCallback } from "react";
 
 interface UploadCardProps {
+  /**
+   * Called with the selected file when validation succeeds.
+   * Called with `null` when the file is cleared or fails validation.
+   */
   onFileChange: (file: File | null) => void;
+  /**
+   * Optional callback for surfacing validation errors to parent components.
+   * Useful for showing error banners or analytics.
+   */
   onError?: (error: string) => void;
 }
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+/** Maximum allowed file size in bytes (10 MB). */
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+/** Divisor used to convert bytes to megabytes for human-readable messages. */
 const MB_DIVISOR = 1024 * 1024;
-// Use Set for O(1) lookup instead of O(n) array.includes()
+
+/**
+ * Allowed file extensions (normalized to lowercase).
+ * Using a Set gives O(1) membership tests.
+ */
 const ALLOWED_FILE_TYPES = new Set(["pdf", "doc", "docx", "txt"]);
+
+/**
+ * Allowed MIME types as reported by the browser File object.
+ * This is a secondary check; some environments may not set this reliably.
+ */
 const ALLOWED_MIME_TYPES = new Set([
   "application/pdf",
   "application/msword",
@@ -18,6 +37,18 @@ const ALLOWED_MIME_TYPES = new Set([
   "text/plain",
 ]);
 
+/**
+ * UploadCard
+ *
+ * RESPONSIBILITY:
+ * - Presents a drag-and-drop style file upload area.
+ * - Validates file size and type on the client before passing it upstream.
+ * - Shows inline validation errors directly under the control.
+ *
+ * DOES NOT:
+ * - Read file contents.
+ * - Make network or API calls.
+ */
 export default function UploadCard({ onFileChange, onError }: UploadCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -55,6 +86,8 @@ export default function UploadCard({ onFileChange, onError }: UploadCardProps) {
     
     if (file) {
       const error = validateFile(file);
+
+      // If validation fails, clear the visible state and propagate error.
       if (error) {
         setValidationError(error);
         setFileName(null);
