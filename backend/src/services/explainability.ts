@@ -5,23 +5,44 @@ import {
   AggregatedScore,
   AnalysisResult,
 } from "../types";
+import {
+  RoleLevel,
+  isEarlyCareerRole,
+  getRoleCalibrationFactors,
+} from "./roleCalibration";
 
 /**
- * Generates explainability artifacts for the analysis result
+ * Generates explainability artifacts for the analysis result.
+ * 
+ * UPDATED: Explanations now explicitly mention role-level adjustments:
+ * - "Expectations adjusted for entry-level role"
+ * - "Transferable PM experience positively weighted"
+ * - "Lack of revenue KPIs not penalized for intern role"
  */
 export function generateExplanations(
   atsResult: ATSResult,
   recruiterResult: RecruiterResult,
   interviewResult: InterviewReadinessResult,
-  aggregatedScore: AggregatedScore
+  aggregatedScore: AggregatedScore,
+  roleLevel: RoleLevel = undefined
 ): AnalysisResult["explanations"] {
-  // ATS Stage Explanation
+  const isEarlyCareer = isEarlyCareerRole(roleLevel);
+  const calibration = getRoleCalibrationFactors(roleLevel);
+  
+  const roleLevelContext = isEarlyCareer
+    ? " Expectations adjusted for entry-level role."
+    : roleLevel === "mid"
+    ? " Expectations calibrated for mid-level role."
+    : roleLevel && ["senior", "staff", "principal", "executive"].includes(roleLevel)
+    ? " Expectations calibrated for senior-level role."
+    : "";
+  // ATS Stage Explanation (with role-level context)
   const atsSummary =
     atsResult.compatibility_score >= 70
-      ? `ATS compatibility is strong (${atsResult.compatibility_score.toFixed(1)}/100). Resume likely to pass ATS screening.`
+      ? `ATS compatibility is strong (${atsResult.compatibility_score.toFixed(1)}/100). Resume likely to pass ATS screening.${roleLevelContext}`
       : atsResult.compatibility_score >= 50
-      ? `ATS compatibility is moderate (${atsResult.compatibility_score.toFixed(1)}/100). Some improvements could increase pass probability.`
-      : `ATS compatibility is weak (${atsResult.compatibility_score.toFixed(1)}/100). Significant improvements needed to pass ATS screening.`;
+      ? `ATS compatibility is moderate (${atsResult.compatibility_score.toFixed(1)}/100). Some improvements could increase pass probability.${roleLevelContext}`
+      : `ATS compatibility is weak (${atsResult.compatibility_score.toFixed(1)}/100). Significant improvements needed to pass ATS screening.${roleLevelContext}`;
 
   const atsKeyFactors: string[] = [];
   if (atsResult.compatibility_score >= 70) {
@@ -40,16 +61,24 @@ export function generateExplanations(
     atsKeyFactors.push("Missing phone number");
   }
   if (atsResult.keyword_match_percentage < 50) {
-    atsKeyFactors.push(`Low keyword match: ${atsResult.keyword_match_percentage.toFixed(1)}%`);
+    const context = isEarlyCareer
+      ? " (penalty reduced for entry-level role)"
+      : "";
+    atsKeyFactors.push(`Low keyword match: ${atsResult.keyword_match_percentage.toFixed(1)}%${context}`);
+  }
+  
+  // Add role-level specific factors
+  if (isEarlyCareer && atsResult.keyword_match_percentage > 40) {
+    atsKeyFactors.push("Transferable experience positively weighted for entry-level role");
   }
 
-  // Recruiter Stage Explanation
+  // Recruiter Stage Explanation (with role-level context)
   const recruiterSummary =
     recruiterResult.evaluation_score >= 70
-      ? `Recruiter evaluation is strong (${recruiterResult.evaluation_score.toFixed(1)}/100). Resume likely to advance to interview stage.`
+      ? `Recruiter evaluation is strong (${recruiterResult.evaluation_score.toFixed(1)}/100). Resume likely to advance to interview stage.${roleLevelContext}`
       : recruiterResult.evaluation_score >= 50
-      ? `Recruiter evaluation is moderate (${recruiterResult.evaluation_score.toFixed(1)}/100). Some concerns may affect advancement.`
-      : `Recruiter evaluation is weak (${recruiterResult.evaluation_score.toFixed(1)}/100). Significant concerns may prevent advancement.`;
+      ? `Recruiter evaluation is moderate (${recruiterResult.evaluation_score.toFixed(1)}/100). Some concerns may affect advancement.${roleLevelContext}`
+      : `Recruiter evaluation is weak (${recruiterResult.evaluation_score.toFixed(1)}/100). Significant concerns may prevent advancement.${roleLevelContext}`;
 
   const recruiterKeyFactors: string[] = [];
   if (recruiterResult.evaluation_score >= 70) {
@@ -57,21 +86,28 @@ export function generateExplanations(
   }
   if (recruiterResult.career_progression_score >= 0.7) {
     recruiterKeyFactors.push("Positive career progression trajectory");
+  } else if (isEarlyCareer && recruiterResult.career_progression_score >= 0.4) {
+    recruiterKeyFactors.push("Transferable experience shows potential for entry-level role");
   }
   if (recruiterResult.job_stability_score >= 0.7) {
     recruiterKeyFactors.push("Good job stability indicators");
+  } else if (isEarlyCareer) {
+    recruiterKeyFactors.push("Job stability less critical for entry-level roles");
   }
   for (const redFlag of recruiterResult.red_flags) {
-    recruiterKeyFactors.push(`Red flag: ${redFlag.type} (${redFlag.severity} severity)`);
+    const context = isEarlyCareer && redFlag.severity === "medium"
+      ? " (severity reduced for entry-level role)"
+      : "";
+    recruiterKeyFactors.push(`Red flag: ${redFlag.type} (${redFlag.severity} severity)${context}`);
   }
 
-  // Interview Stage Explanation
+  // Interview Stage Explanation (with role-level context)
   const interviewSummary =
     interviewResult.readiness_score >= 70
-      ? `Interview readiness is strong (${interviewResult.readiness_score.toFixed(1)}/100). Resume claims are defensible and interview-ready.`
+      ? `Interview readiness is strong (${interviewResult.readiness_score.toFixed(1)}/100). Resume claims are defensible and interview-ready.${roleLevelContext}`
       : interviewResult.readiness_score >= 50
-      ? `Interview readiness is moderate (${interviewResult.readiness_score.toFixed(1)}/100). Some claims may need clarification in interviews.`
-      : `Interview readiness is weak (${interviewResult.readiness_score.toFixed(1)}/100). Multiple claims may be challenged in interviews.`;
+      ? `Interview readiness is moderate (${interviewResult.readiness_score.toFixed(1)}/100). Some claims may need clarification in interviews.${roleLevelContext}`
+      : `Interview readiness is weak (${interviewResult.readiness_score.toFixed(1)}/100). Multiple claims may be challenged in interviews.${roleLevelContext}`;
 
   const interviewKeyFactors: string[] = [];
   if (interviewResult.readiness_score >= 70) {
@@ -81,8 +117,23 @@ export function generateExplanations(
   if (defensibleClaims.length > 0) {
     interviewKeyFactors.push(`${defensibleClaims.length} defensible resume claim(s) with strong evidence`);
   }
+  
+  // Role-level specific factors
+  if (isEarlyCareer) {
+    const ownershipClaims = interviewResult.resume_claims.filter((c) =>
+      /\b(owned|led|built|created|managed)\b/i.test(c.claim_text)
+    );
+    if (ownershipClaims.length > 0) {
+      interviewKeyFactors.push(`Ownership signals positively weighted for entry-level role (${ownershipClaims.length} claim(s))`);
+    }
+    interviewKeyFactors.push("Lack of revenue KPIs not penalized for entry-level role");
+  }
+  
   for (const risk of interviewResult.consistency_risks) {
-    interviewKeyFactors.push(`Consistency risk: ${risk.risk_type} (${risk.severity} severity)`);
+    const context = isEarlyCareer
+      ? " (penalty reduced for entry-level role)"
+      : "";
+    interviewKeyFactors.push(`Consistency risk: ${risk.risk_type} (${risk.severity} severity)${context}`);
   }
 
   // Overall Explanation
@@ -119,7 +170,7 @@ export function generateExplanations(
     impact_probability_delta?: number;
   }> = [];
 
-  // ATS recommendations
+  // ATS recommendations (with role-level context)
   if (!atsResult.required_fields_status.email) {
     recommendations.push({
       priority: "high",
@@ -134,15 +185,18 @@ export function generateExplanations(
   }
 
   if (atsResult.keyword_match_percentage < 60) {
+    const context = isEarlyCareer
+      ? " For entry-level roles, focus on transferable skills and learning velocity."
+      : "";
     recommendations.push({
       priority: atsResult.keyword_match_percentage < 40 ? "high" : "medium",
       category: "keyword_optimization",
       action: `Incorporate missing keywords naturally: ${atsResult.keyword_breakdown.missing_keywords.slice(0, 3).join(", ")}`,
-      impact: `Keyword match is ${atsResult.keyword_match_percentage.toFixed(1)}%. Increasing to 70%+ would significantly improve ATS compatibility.`,
-      reasoning: `ATS systems rank candidates by keyword match. Missing ${atsResult.keyword_breakdown.missing_keywords.length} required keywords reduces visibility.`,
+      impact: `Keyword match is ${atsResult.keyword_match_percentage.toFixed(1)}%. Increasing to 70%+ would significantly improve ATS compatibility.${context}`,
+      reasoning: `ATS systems rank candidates by keyword match. Missing ${atsResult.keyword_breakdown.missing_keywords.length} required keywords reduces visibility.${context}`,
       stage_affected: "ats",
-      impact_score_delta: Math.min(20.0, (70.0 - atsResult.keyword_match_percentage) * 0.5),
-      impact_probability_delta: Math.min(0.20, (70.0 - atsResult.keyword_match_percentage) / 100.0),
+      impact_score_delta: Math.min(20.0, (70.0 - atsResult.keyword_match_percentage) * 0.5) * (isEarlyCareer ? 0.7 : 1.0),
+      impact_probability_delta: Math.min(0.20, (70.0 - atsResult.keyword_match_percentage) / 100.0) * (isEarlyCareer ? 0.7 : 1.0),
     });
   }
 
@@ -162,17 +216,20 @@ export function generateExplanations(
     }
   }
 
-  // Interview recommendations
+  // Interview recommendations (with role-level context)
   for (const risk of interviewResult.consistency_risks.slice(0, 3)) {
+    const context = isEarlyCareer
+      ? " For entry-level roles, focus on ownership and learning velocity rather than revenue KPIs."
+      : "";
     recommendations.push({
       priority: risk.severity === "high" ? "high" : "medium",
       category: "achievement_enhancement",
       action: `Add specific details and metrics to support claim`,
-      impact: "Vague claims will be probed in interviews. Specific details with metrics make claims defensible.",
-      reasoning: risk.description,
+      impact: `Vague claims will be probed in interviews. Specific details with metrics make claims defensible.${context}`,
+      reasoning: risk.description + context,
       stage_affected: "interview",
-      impact_score_delta: risk.severity === "high" ? 15.0 : 8.0,
-      impact_probability_delta: risk.severity === "high" ? 0.15 : 0.08,
+      impact_score_delta: (risk.severity === "high" ? 15.0 : 8.0) * calibration.vagueClaimPenaltyMultiplier,
+      impact_probability_delta: (risk.severity === "high" ? 0.15 : 0.08) * calibration.vagueClaimPenaltyMultiplier,
     });
   }
 

@@ -1,4 +1,9 @@
 import { InterviewReadinessResult, ParsedResume } from "../types";
+import {
+  RoleLevel,
+  getRoleCalibrationFactors,
+  isEarlyCareerRole,
+} from "./roleCalibration";
 
 /**
  * Extracts resume claims (bullet points) from text
@@ -148,37 +153,74 @@ function detectConsistencyRisks(
 }
 
 /**
- * Scores interview readiness
+ * Scores interview readiness.
+ * 
+ * UPDATED WITH ROLE-LEVEL CALIBRATION:
+ * - Entry-level: Reduced penalties for vague claims (less polished resumes are normal)
+ * - Missing revenue KPIs is not penalized for entry-level roles
+ * - Transferable experience (projects, internships) is considered defensible
  */
 export function scoreInterview(
   parsedResume: ParsedResume,
-  resumeText: string
+  resumeText: string,
+  roleLevel: RoleLevel = undefined
 ): InterviewReadinessResult {
+  const calibration = getRoleCalibrationFactors(roleLevel);
+  const isEarlyCareer = isEarlyCareerRole(roleLevel);
+  
   const claims = extractResumeClaims(resumeText);
   const predictedQuestions = predictInterviewQuestions(claims);
   const consistencyRisks = detectConsistencyRisks(claims);
 
   // Calculate defensibility score (average of claim defensibility)
-  const defensibilityScore =
+  let defensibilityScore =
     claims.length > 0
       ? claims.reduce((sum, c) => sum + c.defensibility_score, 0) / claims.length
       : 0.5;
 
-  // Calculate readiness score (0-100)
-  let readinessScore = 100.0;
-
-  // Deduct for risky claims
-  for (const risk of consistencyRisks) {
-    if (risk.severity === "high") {
-      readinessScore -= 10;
-    } else if (risk.severity === "medium") {
-      readinessScore -= 5;
+  // For entry-level, boost defensibility if claims show ownership/initiative
+  // (even without revenue KPIs, ownership signals are valuable)
+  if (isEarlyCareer && claims.length > 0) {
+    const ownershipClaims = claims.filter((c) =>
+      /\b(owned|led|built|created|managed|founded|started)\b/i.test(c.claim_text)
+    );
+    if (ownershipClaims.length > 0) {
+      // Boost defensibility for ownership signals (shows potential)
+      defensibilityScore = Math.min(0.85, defensibilityScore + ownershipClaims.length * 0.1);
     }
   }
 
-  // Deduct for low defensibility
+  // Calculate readiness score (0-100)
+  let readinessScore = 100.0;
+
+  // Deduct for risky claims (penalties are calibrated by role level)
+  for (const risk of consistencyRisks) {
+    if (risk.severity === "high") {
+      const penalty = 10 * calibration.vagueClaimPenaltyMultiplier;
+      readinessScore -= penalty;
+    } else if (risk.severity === "medium") {
+      const penalty = 5 * calibration.vagueClaimPenaltyMultiplier;
+      readinessScore -= penalty;
+    }
+  }
+
+  // Deduct for low defensibility (calibrated penalty)
   if (defensibilityScore < 0.5) {
-    readinessScore -= 15;
+    const penalty = 15 * calibration.vagueClaimPenaltyMultiplier;
+    readinessScore -= penalty;
+  }
+
+  // For entry-level, don't penalize for missing revenue KPIs
+  // (entry-level candidates rarely have revenue impact metrics)
+  if (!isEarlyCareer) {
+    // Check for revenue/KPI metrics in claims (only penalize senior roles if missing)
+    const hasKpiMetrics = claims.some((c) =>
+      /\$\d+[KMB]?|\d+\s*(million|thousand|k|m|b)|revenue|profit|roi|kpi/i.test(c.claim_text)
+    );
+    if (claims.length > 0 && !hasKpiMetrics && roleLevel && ["senior", "staff", "principal", "executive"].includes(roleLevel)) {
+      // Senior roles should have KPIs
+      readinessScore -= 8 * calibration.missingKpiPenaltyMultiplier;
+    }
   }
 
   readinessScore = Math.max(0, Math.min(100, Math.round(readinessScore * 100) / 100));

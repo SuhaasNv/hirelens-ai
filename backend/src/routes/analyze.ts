@@ -8,6 +8,7 @@ import { scoreInterview } from "../services/interviewScorer";
 import { aggregateScores } from "../services/aggregator";
 import { generateExplanations } from "../services/explainability";
 import { AnalysisResult } from "../types";
+import { RoleLevel } from "../services/roleCalibration";
 
 // Zod schemas for request validation
 const ResumeInputSchema = z.object({
@@ -106,22 +107,33 @@ export default async function analyzeRoute(fastify: FastifyInstance) {
         // Determine configuration values once (avoid repeated optional chaining)
         const atsType = options?.ats_type || resume.metadata?.preferences?.ats_type || "generic";
         const recruiterPersona = options?.recruiter_persona || "generic";
+        // Cast role_level to RoleLevel type (validates against known role levels)
+        const roleLevelRaw = options?.role_level || job_description.structured_data?.role_level;
+        const roleLevel: RoleLevel = roleLevelRaw && 
+          ["entry", "intern", "apm", "mid", "senior", "staff", "principal", "executive"].includes(roleLevelRaw)
+          ? (roleLevelRaw as RoleLevel)
+          : undefined;
         const jobDescriptionText = job_description.job_description_text;
 
-        // Score all stages (synchronous operations, but extracted for clarity)
-        const atsResult = scoreATS(parsedResume, resumeText, jobDescriptionText, atsType);
-        const recruiterResult = scoreRecruiter(parsedResume, resumeText, recruiterPersona);
-        const interviewResult = scoreInterview(parsedResume, resumeText);
+        // Score all stages with role-level calibration
+        // Role-level calibration adjusts expectations and penalties based on role level
+        // (entry/intern/apm vs mid vs senior)
+        const atsResult = scoreATS(parsedResume, resumeText, jobDescriptionText, atsType, roleLevel);
+        const recruiterResult = scoreRecruiter(parsedResume, resumeText, recruiterPersona, roleLevel);
+        const interviewResult = scoreInterview(parsedResume, resumeText, roleLevel);
 
-        // Aggregate scores
-        const aggregatedScore = aggregateScores(atsResult, recruiterResult, interviewResult);
+        // Aggregate scores with probability dampening guards
+        // Prevents unfair compounding penalties for strong early-career candidates
+        const aggregatedScore = aggregateScores(atsResult, recruiterResult, interviewResult, roleLevel);
 
-        // Generate explanations
+        // Generate explanations with role-level context
+        // Explanations explicitly mention when expectations are adjusted for role level
         const explanations = generateExplanations(
           atsResult,
           recruiterResult,
           interviewResult,
-          aggregatedScore
+          aggregatedScore,
+          roleLevel
         );
 
         // Calculate processing time
